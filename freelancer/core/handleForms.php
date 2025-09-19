@@ -51,12 +51,19 @@ if (isset($_POST['loginUserBtn'])) {
 	if (!empty($email) && !empty($password)) {
 
 		if ($userObj->loginUser($email, $password)) {
-			header("Location: ../index.php");
+			// Redirect administrators to admin panel
+			if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'fiverr_administrator') {
+				header("Location: ../admin/index.php");
+			} else {
+				header("Location: ../index.php");
+			}
+			exit;
 		}
 		else {
 			$_SESSION['message'] = "Username/password invalid";
 			$_SESSION['status'] = "400";
 			header("Location: ../login.php");
+			exit;
 		}
 	}
 
@@ -64,6 +71,7 @@ if (isset($_POST['loginUserBtn'])) {
 		$_SESSION['message'] = "Please make sure there are no empty input fields";
 		$_SESSION['status'] = '400';
 		header("Location: ../login.php");
+		exit;
 	}
 
 }
@@ -88,6 +96,8 @@ if (isset($_POST['insertNewProposalBtn'])) {
 	$description = htmlspecialchars($_POST['description']);
 	$min_price = htmlspecialchars($_POST['min_price']);
 	$max_price = htmlspecialchars($_POST['max_price']);
+	$category_id = !empty($_POST['category_id']) ? (int)$_POST['category_id'] : null;
+	$subcategory_id = !empty($_POST['subcategory_id']) ? (int)$_POST['subcategory_id'] : null;
 
 	// Get file name
 	$fileName = $_FILES['image']['name'];
@@ -109,7 +119,7 @@ if (isset($_POST['insertNewProposalBtn'])) {
 
 	// Move file to the specified path 
 	if (move_uploaded_file($tempFileName, $folder)) {
-		if ($proposalObj->createProposal($user_id, $description, $imageName, $min_price, $max_price)) {
+		if ($proposalObj->createProposal($user_id, $description, $imageName, $min_price, $max_price, $category_id, $subcategory_id)) {
 			$_SESSION['status'] = "200";
 			$_SESSION['message'] = "Proposal saved successfully!";
 			header("Location: ../index.php");
@@ -122,7 +132,9 @@ if (isset($_POST['updateProposalBtn'])) {
 	$max_price = $_POST['max_price'];
 	$proposal_id = $_POST['proposal_id'];
 	$description = htmlspecialchars($_POST['description']);
-	if ($proposalObj->updateProposal($description, $min_price, $max_price, $proposal_id)) {
+	$category_id = !empty($_POST['category_id']) ? (int)$_POST['category_id'] : null;
+	$subcategory_id = !empty($_POST['subcategory_id']) ? (int)$_POST['subcategory_id'] : null;
+	if ($proposalObj->updateProposal($description, $min_price, $max_price, $proposal_id, "", $category_id, $subcategory_id)) {
 		$_SESSION['status'] = "200";
 		$_SESSION['message'] = "Proposal updated successfully!";
 		header("Location: ../your_proposals.php");

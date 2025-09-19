@@ -29,11 +29,11 @@ class Offer extends Database {
         $sql = "SELECT 
                     offers.*, fiverr_clone_users.*, 
                     offers.date_added AS offer_date_added 
-                FROM Offers 
+                FROM offers 
                 JOIN fiverr_clone_users ON 
                     offers.user_id = fiverr_clone_users.user_id
                 WHERE proposal_id = ? 
-                ORDER BY Offers.date_added DESC";
+                ORDER BY offers.date_added DESC";
         return $this->executeQuery($sql, [$proposal_id]);
     }
 

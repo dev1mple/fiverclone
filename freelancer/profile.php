@@ -53,7 +53,11 @@ if ($userObj->isAdmin()) {
               <div class="row">
                 <div class="col-md-6">
                   <img src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png" class="img-fluid mt-4 mb-4" alt="">
-                  <h3>Username: <?php echo $userInfo['username']; ?></h3>
+                  <h3>Username: <?php echo $userInfo['username']; ?>
+                    <?php if (isset($userInfo['user_role']) && $userInfo['user_role'] === 'fiverr_administrator'): ?>
+                      <span class="badge badge-warning ml-2">ADMIN</span>
+                    <?php endif; ?>
+                  </h3>
                   <h3>Email: <?php echo $userInfo['email']; ?></h3>
                   <h3>Phone Number: <?php echo $userInfo['contact_number']; ?></h3>
                 </div>

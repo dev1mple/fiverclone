@@ -17,6 +17,13 @@
       <li class="nav-item">
         <a class="nav-link" href="offers_from_clients.php">Offers From Clients</a>
       </li>
+      <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'fiverr_administrator'): ?>
+      <li class="nav-item">
+        <a class="nav-link" href="../admin/index.php">
+          <i class="fas fa-crown me-1"></i>Admin Panel
+        </a>
+      </li>
+      <?php endif; ?>
       <li class="nav-item">
         <a class="nav-link" href="core/handleForms.php?logoutUserBtn=1">Logout</a>
       </li>

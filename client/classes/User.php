@@ -31,6 +31,26 @@ class User extends Database {
             return false;
         }
     }
+
+    /**
+     * Checks if the email already exists in the database.
+     * @param string $email The email to check.
+     * @return bool True if email exists, false otherwise.
+     */
+    public function isEmailExists($email) {
+        $sql = "SELECT COUNT(*) as email_count FROM fiverr_clone_users WHERE email = ?";
+        $count = $this->executeQuerySingle($sql, [$email]);
+        return $count['email_count'] > 0;
+    }
+
+    /**
+     * Checks if the username already exists in the database (alias for usernameExists).
+     * @param string $username The username to check.
+     * @return bool True if username exists, false otherwise.
+     */
+    public function isUsernameExists($username) {
+        return $this->usernameExists($username);
+    }
     
 
     /**
@@ -38,14 +58,16 @@ class User extends Database {
      * @param string $username The user's username.
      * @param string $email The user's email.
      * @param string $password The user's password.
-     * @param bool $is_admin Whether the user is an admin.
+     * @param string $contact_number The user's contact number.
+     * @param bool $is_client Whether the user is a client.
+     * @param string $user_role The user's role (client, freelancer, fiverr_administrator).
      * @return bool True on success, false on failure.
      */
-    public function registerUser($username, $email, $password, $contact_number, $is_client = 1) {
+    public function registerUser($username, $email, $password, $contact_number, $is_client = 1, $user_role = 'client') {
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-        $sql = "INSERT INTO fiverr_clone_users (username, email, password, is_client, contact_number) VALUES (?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO fiverr_clone_users (username, email, password, is_client, contact_number, user_role) VALUES (?, ?, ?, ?, ?, ?)";
         try {
-            $this->executeNonQuery($sql, [$username, $email, $hashed_password, $is_client, $contact_number]);
+            $this->executeNonQuery($sql, [$username, $email, $hashed_password, $is_client, $contact_number, $user_role]);
             return true;
         } catch (\PDOException $e) {
             return false;
@@ -59,7 +81,7 @@ class User extends Database {
      * @return bool True on success, false on failure.
      */
     public function loginUser($email, $password) {
-        $sql = "SELECT user_id, username, password, is_client FROM fiverr_clone_users WHERE email = ?";
+        $sql = "SELECT user_id, username, password, is_client, user_role FROM fiverr_clone_users WHERE email = ?";
         $user = $this->executeQuerySingle($sql, [$email]);
 
         if ($user && password_verify($password, $user['password'])) {
@@ -67,6 +89,7 @@ class User extends Database {
             $_SESSION['user_id'] = $user['user_id'];
             $_SESSION['username'] = $user['username'];
             $_SESSION['is_client'] = (bool)$user['is_client'];
+            $_SESSION['user_role'] = $user['user_role'];
             return true;
         }
         return false;
@@ -88,6 +111,25 @@ class User extends Database {
     public function isAdmin() {
         $this->startSession();
         return isset($_SESSION['is_client']) && $_SESSION['is_client'];
+    }
+
+    /**
+     * Checks if the logged-in user is a Fiverr administrator.
+     * @return bool
+     */
+    public function isFiverrAdministrator() {
+        $this->startSession();
+        return isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'fiverr_administrator';
+    }
+
+    /**
+     * Checks if the logged-in user can submit offers (client or administrator).
+     * @return bool
+     */
+    public function canSubmitOffers() {
+        $this->startSession();
+        return isset($_SESSION['user_role']) && 
+               ($_SESSION['user_role'] === 'client' || $_SESSION['user_role'] === 'fiverr_administrator');
     }
 
     /**

@@ -4,8 +4,11 @@ if (!$userObj->isLoggedIn()) {
   header("Location: login.php");
 }
 
-if (!$userObj->isAdmin()) {
+// Check if user is a client or administrator (administrators can act as clients)
+// isAdmin() returns true for clients (is_client = 1), false for freelancers (is_client = 0)
+if (!$userObj->isAdmin() && !$userObj->isFiverrAdministrator()) {
   header("Location: ../freelancer/index.php");
+  exit;
 } 
 ?>
 <!doctype html>
@@ -27,7 +30,14 @@ if (!$userObj->isAdmin()) {
   <body>
     <?php include 'includes/navbar.php'; ?>
     <div class="container-fluid">
-      <div class="display-4 text-center">Hello there and welcome! <span class="text-success"><?php echo $_SESSION['username']; ?>. </span> Double click to edit your offers and then press enter to save!</div>
+      <div class="display-4 text-center">Hello there and welcome! 
+        <span class="text-success"><?php echo $_SESSION['username']; ?>
+          <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'fiverr_administrator'): ?>
+            <span class="badge badge-warning ml-2">ADMIN</span>
+          <?php endif; ?>
+        </span>. 
+        Double click to edit your offers and then press enter to save!
+      </div>
       <div class="text-center">
         <?php  
           if (isset($_SESSION['message']) && isset($_SESSION['status'])) {
@@ -56,6 +66,14 @@ if (!$userObj->isAdmin()) {
                   <h2><a href="other_profile_view.php?user_id=<?php echo $proposal['user_id'] ?>"><?php echo $proposal['username']; ?></a></h2>
                   <img src="<?php echo '../images/'.$proposal['image']; ?>" class="img-fluid" alt="">
                   <p class="mt-4 mb-4"><?php echo $proposal['description']; ?></p>
+                  <?php if (!empty($proposal['category_name'])): ?>
+                    <p class="mt-2"><strong>Category:</strong> 
+                      <span class="badge badge-info"><?php echo htmlspecialchars($proposal['category_name']); ?></span>
+                      <?php if (!empty($proposal['subcategory_name'])): ?>
+                        <span class="badge badge-secondary"><?php echo htmlspecialchars($proposal['subcategory_name']); ?></span>
+                      <?php endif; ?>
+                    </p>
+                  <?php endif; ?>
                   <h4><i><?php echo number_format($proposal['min_price']) . " - " . number_format($proposal['max_price']);?> PHP</i></h4>
                 </div>
                 <div class="col-md-6">
@@ -66,7 +84,12 @@ if (!$userObj->isAdmin()) {
                       <?php $getOffersByProposalID = $offerObj->getOffersByProposalID($proposal['proposal_id']); ?>
                       <?php foreach ($getOffersByProposalID as $offer) { ?>
                       <div class="offer">
-                        <h4><?php echo $offer['username']; ?> <span class="text-primary">( <?php echo $offer['contact_number']; ?> )</span></h4>
+                        <h4><?php echo $offer['username']; ?>
+                          <?php if (isset($offer['user_role']) && $offer['user_role'] === 'fiverr_administrator'): ?>
+                            <span class="badge badge-warning ml-1">ADMIN</span>
+                          <?php endif; ?>
+                          <span class="text-primary">( <?php echo $offer['contact_number']; ?> )</span>
+                        </h4>
                         <small><i><?php echo $offer['offer_date_added']; ?></i></small>
                         <p><?php echo $offer['description']; ?></p>
 
